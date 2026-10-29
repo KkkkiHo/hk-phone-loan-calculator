@@ -12,17 +12,6 @@
   .wrap{max-width:680px;margin:0 auto;padding:16px 14px 40px}
   h1{font-size:24px;margin:6px 0 4px}
   .sub{color:#5b6b7c;margin:0 0 16px;font-size:14px}
-  .avatarRow{display:flex;gap:12px;align-items:flex-start}
-  .avatarRow h1{margin:2px 0 4px}
-  .avatarRow .sub{margin:0 0 4px}
-  .avatarBtn{width:64px;height:64px;flex:none;border-radius:50%;border:2px solid #2563eb;background:#e8efff;font-size:32px;line-height:1;cursor:pointer;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
-  .avatarBtn img{width:100%;height:100%;object-fit:cover;display:block}
-  .avatarPanel .hint{margin:4px 0 0}
-  .avatarGrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  .avatarOpt{width:52px;height:52px;border-radius:50%;border:2px solid #cbd5df;font-size:26px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
-  .avatarOpt[aria-pressed="true"]{border-color:#2563eb}
-  .uploadLabel{display:block;font-size:14px;font-weight:700;margin-top:14px}
-  .uploadLabel input{margin-top:6px;font-size:14px}
   .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
   label{display:block;font-size:14px;font-weight:700;margin:14px 0 6px}
   label:first-child{margin-top:0}
@@ -57,25 +46,8 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="avatarRow">
-    <button type="button" class="avatarBtn" id="avatarBtn" aria-label="選擇頭像">👤</button>
-    <div>
-      <h1>電話數計算機</h1>
-      <p class="sub">電話數（電仔數）通常係短期、到期一次還清：知道借幾多、幾多日、到期還幾多，反推月平息同實際年利率。亦可以由利率正向計到期要還幾多。所有計算只喺你部手機入面做，唔會上傳。</p>
-    </div>
-  </div>
-
-  <div class="card avatarPanel" id="avatarPanel" hidden>
-    <strong>選擇頭像</strong>
-    <p class="hint">撳頭像即時更換，重新開網頁都仲係你揀嗰個。頭像同上傳嘅相片只存喺呢部手機，唔會上傳。</p>
-    <div class="avatarGrid" id="avatarGrid"></div>
-    <label class="uploadLabel">上傳自己相片
-      <input id="avatarUpload" type="file" accept="image/*">
-    </label>
-    <div class="actions">
-      <button type="button" id="avatarReset">用返預設頭像</button>
-    </div>
-  </div>
+  <h1>電話數計算機</h1>
+  <p class="sub">電話數（電仔數）通常係短期、到期一次還清：知道借幾多、幾多日、到期還幾多，反推月平息同實際年利率。亦可以由利率正向計到期要還幾多。所有計算只喺你部手機入面做，唔會上傳。</p>
 
   <div class="card">
     <div class="modes" role="group" aria-label="計算方式">
@@ -183,66 +155,6 @@ function pct(x, digits){
 function parseNum(el){
   var v = parseFloat(el.value);
   return isFinite(v) ? v : NaN;
-}
-
-var AVATAR_KEY = "phone-loan-avatar-v1";
-var AVATARS = [
-  {emoji: "👤", bg: "#e8efff"},
-  {emoji: "👨‍💼", bg: "#e8efff"},
-  {emoji: "👩‍💼", bg: "#fce7f3"},
-  {emoji: "🧑‍💼", bg: "#fef3c7"},
-  {emoji: "👨", bg: "#dbeafe"},
-  {emoji: "👩", bg: "#fce7f3"},
-  {emoji: "🦊", bg: "#ffedd5"},
-  {emoji: "🐱", bg: "#fef9c3"},
-  {emoji: "💼", bg: "#e0e7ff"}
-];
-function loadAvatar(){
-  try {
-    var raw = localStorage.getItem(AVATAR_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
-}
-function saveAvatar(a){
-  try { localStorage.setItem(AVATAR_KEY, JSON.stringify(a)); } catch (e) {}
-}
-function applyAvatar(a){
-  var btn = $("avatarBtn");
-  if (a && a.type === "photo" && a.data){
-    btn.innerHTML = "";
-    var img = document.createElement("img");
-    img.src = a.data;
-    img.alt = "";
-    btn.appendChild(img);
-    btn.style.background = "#e8efff";
-  } else {
-    btn.innerHTML = "";
-    btn.textContent = (a && a.emoji) || "👤";
-    btn.style.background = (a && a.bg) || "#e8efff";
-  }
-  document.querySelectorAll(".avatarOpt").forEach(function(b){
-    var isCurrent = !!a && a.type !== "photo" && b.getAttribute("data-emoji") === a.emoji;
-    b.setAttribute("aria-pressed", isCurrent ? "true" : "false");
-  });
-}
-function renderAvatarGrid(){
-  var grid = $("avatarGrid");
-  grid.innerHTML = "";
-  AVATARS.forEach(function(a){
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "avatarOpt";
-    b.setAttribute("data-emoji", a.emoji);
-    b.style.background = a.bg;
-    b.textContent = a.emoji;
-    b.setAttribute("aria-label", "選擇頭像 " + a.emoji);
-    b.addEventListener("click", function(){
-      var chosen = {type: "emoji", emoji: a.emoji, bg: a.bg};
-      saveAvatar(chosen);
-      applyAvatar(chosen);
-    });
-    grid.appendChild(b);
-  });
 }
 
 function setMode(next){
@@ -365,36 +277,6 @@ $("borrowDate").addEventListener("change", calculate);
 document.querySelectorAll("[data-days]").forEach(function(b){
   b.addEventListener("click", function(){ $("days").value = b.getAttribute("data-days"); calculate(); });
 });
-$("avatarBtn").addEventListener("click", function(){
-  var panel = $("avatarPanel");
-  panel.hidden = !panel.hidden;
-});
-$("avatarReset").addEventListener("click", function(){
-  try { localStorage.removeItem(AVATAR_KEY); } catch (e) {}
-  applyAvatar(null);
-});
-$("avatarUpload").addEventListener("change", function(){
-  var file = $("avatarUpload").files && $("avatarUpload").files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(){
-    var img = new Image();
-    img.onload = function(){
-      var max = 256;
-      var scale = Math.min(1, max / Math.max(img.width, img.height));
-      var canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(img.width * scale));
-      canvas.height = Math.max(1, Math.round(img.height * scale));
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      var chosen = {type: "photo", data: canvas.toDataURL("image/jpeg", 0.85)};
-      saveAvatar(chosen);
-      applyAvatar(chosen);
-    };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-});
 $("copyBtn").addEventListener("click", function(){
   var r = window.__lastResult;
   if (!r) return;
@@ -413,8 +295,6 @@ $("printBtn").addEventListener("click", function(){ window.print(); });
   var today = new Date();
   var iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
   $("borrowDate").value = iso;
-  renderAvatarGrid();
-  applyAvatar(loadAvatar());
   calculate();
 })();
 </script>
