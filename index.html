@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>電話數計算機</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;background:#f2f4f7;color:#1c2733;line-height:1.55}
+  .wrap{max-width:680px;margin:0 auto;padding:16px 14px 40px}
+  h1{font-size:24px;margin:6px 0 4px}
+  .sub{color:#5b6b7c;margin:0 0 16px;font-size:14px}
+  .avatarRow{display:flex;gap:12px;align-items:flex-start}
+  .avatarRow h1{margin:2px 0 4px}
+  .avatarRow .sub{margin:0 0 4px}
+  .avatarBtn{width:64px;height:64px;flex:none;border-radius:50%;border:2px solid #2563eb;background:#e8efff;font-size:32px;line-height:1;cursor:pointer;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .avatarBtn img{width:100%;height:100%;object-fit:cover;display:block}
+  .avatarPanel .hint{margin:4px 0 0}
+  .avatarGrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .avatarOpt{width:52px;height:52px;border-radius:50%;border:2px solid #cbd5df;font-size:26px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+  .avatarOpt[aria-pressed="true"]{border-color:#2563eb}
+  .uploadLabel{display:block;font-size:14px;font-weight:700;margin-top:14px}
+  .uploadLabel input{margin-top:6px;font-size:14px}
+  .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  label{display:block;font-size:14px;font-weight:700;margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  .hint{font-size:13px;color:#5b6b7c;font-weight:400;margin-top:4px}
+  input,select{width:100%;font-size:17px;padding:12px;border:1.5px solid #cbd5df;border-radius:10px;background:#fff}
+  input:focus{outline:2px solid #2563eb;outline-offset:1px}
+  .row{display:flex;gap:10px}
+  .row>div{flex:1}
+  .modes{display:flex;gap:8px;margin-bottom:4px}
+  .mode{flex:1;border:2px solid #cbd5df;background:#fff;border-radius:12px;padding:12px 8px;font-size:16px;font-weight:700;cursor:pointer;text-align:center}
+  .mode[aria-pressed="true"]{border-color:#2563eb;background:#e8efff;color:#1d4ed8}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{border:1px solid #cbd5df;background:#f8fafc;border-radius:999px;padding:8px 12px;font-size:14px;cursor:pointer}
+  .chip:active{background:#e8efff}
+  .calc{width:100%;margin-top:18px;background:#2563eb;color:#fff;border:0;border-radius:12px;padding:14px;font-size:18px;font-weight:700;cursor:pointer}
+  .calc:active{background:#1d4ed8}
+  .results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .stat{background:#f8fafc;border-radius:12px;padding:12px}
+  .stat .k{font-size:13px;color:#5b6b7c}
+  .stat .v{font-size:20px;font-weight:800;margin-top:2px}
+  .stat .v small{font-size:13px;font-weight:400;color:#5b6b7c}
+  .stat.big{grid-column:1/-1;background:#e8efff}
+  .explain{background:#fff7e6;border-radius:10px;padding:12px;font-size:14px;margin-top:12px}
+  .error{display:none;background:#fdecec;color:#9b1c1c;border-radius:10px;padding:12px;font-size:14px;margin-top:12px}
+  .actions{display:flex;gap:10px;margin-top:14px}
+  .actions button{flex:1;padding:11px;border-radius:10px;border:1.5px solid #cbd5df;background:#fff;font-size:15px;font-weight:700;cursor:pointer}
+  .note{font-size:13px;color:#5b6b7c}
+  .disclaimer{font-size:13px;color:#5b6b7c;background:#fff;border-radius:14px;padding:16px}
+  .disclaimer strong{color:#1c2733}
+  @media print{.calc,.actions,.chips,.modes{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="avatarRow">
+    <button type="button" class="avatarBtn" id="avatarBtn" aria-label="選擇頭像">👤</button>
+    <div>
+      <h1>電話數計算機</h1>
+      <p class="sub">電話數（電仔數）通常係短期、到期一次還清：知道借幾多、幾多日、到期還幾多，反推月平息同實際年利率。亦可以由利率正向計到期要還幾多。所有計算只喺你部手機入面做，唔會上傳。</p>
+    </div>
+  </div>
+
+  <div class="card avatarPanel" id="avatarPanel" hidden>
+    <strong>選擇頭像</strong>
+    <p class="hint">撳頭像即時更換，重新開網頁都仲係你揀嗰個。頭像同上傳嘅相片只存喺呢部手機，唔會上傳。</p>
+    <div class="avatarGrid" id="avatarGrid"></div>
+    <label class="uploadLabel">上傳自己相片
+      <input id="avatarUpload" type="file" accept="image/*">
+    </label>
+    <div class="actions">
+      <button type="button" id="avatarReset">用返預設頭像</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="modes" role="group" aria-label="計算方式">
+      <button type="button" class="mode" id="modeReverse" aria-pressed="true">我知到期還幾多</button>
+      <button type="button" class="mode" id="modeFlat" aria-pressed="false">我知月平息</button>
+      <button type="button" class="mode" id="modeAnnual" aria-pressed="false">我知年利率</button>
+    </div>
+    <p class="hint" id="modeHint">到期還款：入貸款額、到期還款總額同日數，反推月平息同實際年利率。</p>
+
+    <label for="amount">貸款金額（港元，批核金額）
+      <input id="amount" type="number" inputmode="decimal" min="1" step="1" value="10000">
+    </label>
+
+    <div class="row">
+      <div>
+        <label for="days">期數（日）
+          <input id="days" type="number" inputmode="numeric" min="1" max="365" step="1" value="7">
+        </label>
+      </div>
+      <div id="rateWrap">
+        <label for="rate"><span id="rateLabel">月平息（% 每月）</span>
+          <input id="rate" type="number" inputmode="decimal" min="0" step="0.01" value="5">
+        </label>
+      </div>
+    </div>
+    <label for="repayment" id="repaymentWrap">到期還款總額（港元，一次還清）
+      <input id="repayment" type="number" inputmode="decimal" min="1" step="0.01" value="10300">
+      <span class="hint">到期嗰日一次要還嘅總數，包括本金同利息。</span>
+    </label>
+    <div class="chips" aria-label="常用期數">
+      <button type="button" class="chip" data-days="7">7 日</button>
+      <button type="button" class="chip" data-days="10">10 日</button>
+      <button type="button" class="chip" data-days="15">15 日</button>
+      <button type="button" class="chip" data-days="30">30 日</button>
+      <button type="button" class="chip" data-days="60">60 日</button>
+      <button type="button" class="chip" data-days="90">90 日</button>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="fee">手續費（港元，可填 0）
+          <input id="fee" type="number" inputmode="decimal" min="0" step="1" value="0">
+          <span class="hint">手續費會喺批核金額度扣，實收金額會計入實際年利率。</span>
+        </label>
+      </div>
+      <div>
+        <label for="borrowDate">借出日期
+          <input id="borrowDate" type="date">
+        </label>
+      </div>
+    </div>
+
+    <button type="button" class="calc" id="calcBtn">計算</button>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div class="card" id="resultCard" hidden>
+    <div class="results">
+      <div class="stat big"><div class="k">到期還款總額（一次還清）</div><div class="v" id="rTotal">—</div></div>
+      <div class="stat"><div class="k">到期日期</div><div class="v" id="rDue">—</div></div>
+      <div class="stat"><div class="k">實收金額（貸款額 − 手續費）</div><div class="v" id="rNet">—</div></div>
+      <div class="stat"><div class="k">總利息（還款 − 貸款額）</div><div class="v" id="rInterest">—</div></div>
+      <div class="stat"><div class="k">總成本（利息＋手續費）</div><div class="v" id="rCost">—</div></div>
+      <div class="stat"><div class="k">月平息（利息計）</div><div class="v" id="rFlat">—</div></div>
+      <div class="stat"><div class="k">相等月平息（計埋手續費）</div><div class="v" id="rEquivFlat">—</div></div>
+      <div class="stat"><div class="k">實際年利率（估算，複利年化）</div><div class="v" id="rApr">—</div></div>
+      <div class="stat"><div class="k">單利年化利率（估算）</div><div class="v" id="rSimple">—</div></div>
+      <div class="stat"><div class="k">每日成本（總成本 ÷ 日數）</div><div class="v" id="rDaily">—</div></div>
+      <div class="stat"><div class="k">名義年利率（月平息 × 12）</div><div class="v" id="rNominal">—</div></div>
+    </div>
+    <div class="explain" id="explain"></div>
+    <div class="actions">
+      <button type="button" id="copyBtn">複製結果</button>
+      <button type="button" id="printBtn">列印／存 PDF</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:17px;margin:0 0 8px">電話數點計？月平息同年利率有咩分別？</h2>
+    <p style="margin:0 0 8px"><strong>電話數：</strong>通常唔使見面、唔使簽約，靠電話或者即時通訊軟件申請，批咗就過數，到期一次還清。期數通常好短，幾日到一個月左右。</p>
+    <p style="margin:0 0 8px"><strong>月平息：</strong>利息按「原本貸款額」計。呢個程式用 30 日當一個月換算：月平息 = 總利息 ÷ 貸款額 ÷（日數 ÷ 30）。</p>
+    <p style="margin:0 0 8px"><strong>年利率：</strong>呢個程式用 365 日計：利息 = 貸款額 × 年利率 × 日數 ÷ 365。到期一次還清，冇逐期還本金，所以唔用餘額遞減嘅分期計法。</p>
+    <p style="margin:0">比較兩單電話數，最緊要同時睇<strong>總成本、日數同實收金額</strong>。短期數將幾日嘅成本年化之後，年利率數字會變得非常大，唔好淨係睇年利率個數字就做決定。</p>
+  </div>
+
+  <div class="disclaimer">
+    <strong>只供參考，唔係貸款建議。</strong>實際條款、手續費、還款安排同實際年利率嘅定義，各間貸款機構可能唔同，一切以貸款合約為準。呢個程式假設到期一次還清、利率固定；月平息按 30 日當一個月換算，年利率按 365 日計；手續費假設喺批核金額度扣，唔會再加落到期還款度；實際年利率係用內部回報率方法估算嘅有效年利率，未計逾期費用同其他收費。借錢之前，要肯定自己還得到先好借。
+  </div>
+</div>
+
+<script>
+"use strict";
+var mode = "reverse";
+var $ = function(id){ return document.getElementById(id); };
+
+function round2(x){ return Math.round((x + Number.EPSILON) * 100) / 100; }
+function money(x){
+  return "HK$" + Number(x).toLocaleString("zh-HK", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+function pct(x, digits){
+  if (digits === undefined) digits = 2;
+  if (!isFinite(x)) return "—";
+  return Number(x).toLocaleString("zh-HK", {minimumFractionDigits: digits, maximumFractionDigits: digits}) + "%";
+}
+function parseNum(el){
+  var v = parseFloat(el.value);
+  return isFinite(v) ? v : NaN;
+}
+
+var AVATAR_KEY = "phone-loan-avatar-v1";
+var AVATARS = [
+  {emoji: "👤", bg: "#e8efff"},
+  {emoji: "👨‍💼", bg: "#e8efff"},
+  {emoji: "👩‍💼", bg: "#fce7f3"},
+  {emoji: "🧑‍💼", bg: "#fef3c7"},
+  {emoji: "👨", bg: "#dbeafe"},
+  {emoji: "👩", bg: "#fce7f3"},
+  {emoji: "🦊", bg: "#ffedd5"},
+  {emoji: "🐱", bg: "#fef9c3"},
+  {emoji: "💼", bg: "#e0e7ff"}
+];
+function loadAvatar(){
+  try {
+    var raw = localStorage.getItem(AVATAR_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function saveAvatar(a){
+  try { localStorage.setItem(AVATAR_KEY, JSON.stringify(a)); } catch (e) {}
+}
+function applyAvatar(a){
+  var btn = $("avatarBtn");
+  if (a && a.type === "photo" && a.data){
+    btn.innerHTML = "";
+    var img = document.createElement("img");
+    img.src = a.data;
+    img.alt = "";
+    btn.appendChild(img);
+    btn.style.background = "#e8efff";
+  } else {
+    btn.innerHTML = "";
+    btn.textContent = (a && a.emoji) || "👤";
+    btn.style.background = (a && a.bg) || "#e8efff";
+  }
+  document.querySelectorAll(".avatarOpt").forEach(function(b){
+    var isCurrent = !!a && a.type !== "photo" && b.getAttribute("data-emoji") === a.emoji;
+    b.setAttribute("aria-pressed", isCurrent ? "true" : "false");
+  });
+}
+function renderAvatarGrid(){
+  var grid = $("avatarGrid");
+  grid.innerHTML = "";
+  AVATARS.forEach(function(a){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "avatarOpt";
+    b.setAttribute("data-emoji", a.emoji);
+    b.style.background = a.bg;
+    b.textContent = a.emoji;
+    b.setAttribute("aria-label", "選擇頭像 " + a.emoji);
+    b.addEventListener("click", function(){
+      var chosen = {type: "emoji", emoji: a.emoji, bg: a.bg};
+      saveAvatar(chosen);
+      applyAvatar(chosen);
+    });
+    grid.appendChild(b);
+  });
+}
+
+function setMode(next){
+  mode = next;
+  $("modeReverse").setAttribute("aria-pressed", next === "reverse" ? "true" : "false");
+  $("modeFlat").setAttribute("aria-pressed", next === "flat" ? "true" : "false");
+  $("modeAnnual").setAttribute("aria-pressed", next === "annual" ? "true" : "false");
+  $("rateWrap").style.display = next === "reverse" ? "none" : "";
+  $("repaymentWrap").style.display = next === "reverse" ? "" : "none";
+  if (next === "reverse"){
+    $("modeHint").textContent = "到期還款：入貸款額、到期還款總額同日數，反推月平息同實際年利率。";
+  } else if (next === "flat"){
+    $("rateLabel").textContent = "月平息（% 每月）";
+    $("rate").value = "5";
+    $("rate").step = "0.01";
+    $("modeHint").textContent = "月平息：利息按原本貸款額計，30 日當一個月換算。";
+  } else {
+    $("rateLabel").textContent = "年利率（% 每年）";
+    $("rate").value = "60";
+    $("rate").step = "0.1";
+    $("modeHint").textContent = "年利率：利息按 365 日計，到期一次還清。";
+  }
+  calculate();
+}
+
+function formatDate(d){
+  var week = ["日", "一", "二", "三", "四", "五", "六"];
+  return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日（星期" + week[d.getDay()] + "）";
+}
+
+function calculate(){
+  var err = $("error");
+  err.style.display = "none";
+  err.textContent = "";
+  var P = parseNum($("amount"));
+  var days = parseNum($("days"));
+  var rate = parseNum($("rate"));
+  var repaymentGiven = parseNum($("repayment"));
+  var fee = parseNum($("fee"));
+  if (isNaN(fee)) fee = 0;
+  if (!isFinite(P) || P <= 0){ showError("請輸入大過 0 嘅貸款金額。"); return; }
+  if (!isFinite(days) || days < 1 || days > 365 || Math.floor(days) !== days){ showError("期數請輸入 1 至 365 嘅整數（日）。"); return; }
+  if (mode !== "reverse" && (!isFinite(rate) || rate < 0)){ showError("請輸入 0 或以上嘅利率。"); return; }
+  if (mode === "reverse"){
+    if (!isFinite(repaymentGiven) || repaymentGiven <= 0){ showError("請輸入大過 0 嘅到期還款總額。"); return; }
+    if (round2(repaymentGiven) < P){ showError("到期還款總額要最少等於貸款金額，否則連本金都還唔到。請檢查到期還款總額。"); return; }
+  }
+  if (fee < 0 || fee >= P){ showError("手續費要細過貸款金額。"); return; }
+
+  var borrowValue = $("borrowDate").value;
+  var borrowDate = borrowValue ? new Date(borrowValue + "T00:00:00") : new Date();
+  if (isNaN(borrowDate.getTime())) borrowDate = new Date();
+  var dueDate = new Date(borrowDate.getFullYear(), borrowDate.getMonth(), borrowDate.getDate() + days);
+
+  var net = round2(P - fee);
+  var interest, repayment, explain;
+  if (mode === "reverse"){
+    repayment = round2(repaymentGiven);
+    interest = round2(repayment - P);
+    explain = "借 " + money(P) + "，" + days + " 日後一次還 " + money(repayment) + "，總利息 " + money(interest) + "。";
+  } else if (mode === "flat"){
+    interest = round2(P * (rate / 100) * (days / 30));
+    repayment = round2(P + interest);
+    explain = "月平息 " + pct(rate) + "，30 日當一個月：" + days + " 日利息係 " + money(P) + " × " + pct(rate) + " × " + days + " ÷ 30 = " + money(interest) + "，到期一次還 " + money(repayment) + "。";
+  } else {
+    interest = round2(P * (rate / 100) * (days / 365));
+    repayment = round2(P + interest);
+    explain = "年利率 " + pct(rate) + "，按 365 日計：" + days + " 日利息係 " + money(P) + " × " + pct(rate) + " × " + days + " ÷ 365 = " + money(interest) + "，到期一次還 " + money(repayment) + "。";
+  }
+
+  var totalCost = round2(repayment - net);
+  var monthsEquiv = days / 30;
+  var flatPct = (interest / (P * monthsEquiv)) * 100;
+  var equivFlatPct = (totalCost / (P * monthsEquiv)) * 100;
+  // 實際年利率：一次還款嘅內部回報率年化，(還款 ÷ 實收) ^ (365 ÷ 日數) − 1。
+  var apr = (Math.pow(repayment / net, 365 / days) - 1) * 100;
+  var simplePct = (totalCost / net) * (365 / days) * 100;
+  var dailyCost = round2(totalCost / days);
+
+  $("rTotal").textContent = money(repayment);
+  $("rDue").textContent = formatDate(dueDate);
+  $("rNet").textContent = money(net);
+  $("rInterest").textContent = money(interest);
+  $("rCost").textContent = money(totalCost);
+  $("rFlat").textContent = pct(flatPct) + " / 月";
+  $("rEquivFlat").textContent = pct(equivFlatPct) + " / 月";
+  $("rApr").textContent = pct(apr);
+  $("rSimple").textContent = pct(simplePct);
+  $("rDaily").textContent = money(dailyCost) + " / 日";
+  $("rNominal").textContent = pct(flatPct * 12);
+  $("explain").textContent = explain
+    + " 月平息（利息計）" + pct(flatPct) + "，計埋手續費嘅相等月平息 " + pct(equivFlatPct) + "。"
+    + (fee > 0 ? " 手續費 " + money(fee) + " 已喺批核金額度扣，實收 " + money(net) + "，總成本 " + money(totalCost) + " 已計埋手續費。" : " 未計手續費。")
+    + " 實際年利率（估算）" + pct(apr) + " 係將 " + days + " 日嘅成本複利年化得出，短期數嘅年化數字會特別大，比較時要同時睇總成本同日數。";
+
+  $("resultCard").hidden = false;
+  window.__lastResult = {
+    mode: mode, P: P, days: days, rate: rate, fee: fee, net: net,
+    repayment: repayment, interest: interest, totalCost: totalCost,
+    flatPct: flatPct, equivFlatPct: equivFlatPct, apr: apr, simplePct: simplePct,
+    due: formatDate(dueDate)
+  };
+}
+
+function showError(msg){
+  var err = $("error");
+  err.textContent = msg;
+  err.style.display = "block";
+  $("resultCard").hidden = true;
+}
+
+$("modeReverse").addEventListener("click", function(){ setMode("reverse"); });
+$("modeFlat").addEventListener("click", function(){ setMode("flat"); });
+$("modeAnnual").addEventListener("click", function(){ setMode("annual"); });
+$("calcBtn").addEventListener("click", calculate);
+["amount","days","rate","fee","repayment"].forEach(function(id){
+  $(id).addEventListener("input", calculate);
+});
+$("borrowDate").addEventListener("change", calculate);
+document.querySelectorAll("[data-days]").forEach(function(b){
+  b.addEventListener("click", function(){ $("days").value = b.getAttribute("data-days"); calculate(); });
+});
+$("avatarBtn").addEventListener("click", function(){
+  var panel = $("avatarPanel");
+  panel.hidden = !panel.hidden;
+});
+$("avatarReset").addEventListener("click", function(){
+  try { localStorage.removeItem(AVATAR_KEY); } catch (e) {}
+  applyAvatar(null);
+});
+$("avatarUpload").addEventListener("change", function(){
+  var file = $("avatarUpload").files && $("avatarUpload").files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var max = 256;
+      var scale = Math.min(1, max / Math.max(img.width, img.height));
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      var chosen = {type: "photo", data: canvas.toDataURL("image/jpeg", 0.85)};
+      saveAvatar(chosen);
+      applyAvatar(chosen);
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+$("copyBtn").addEventListener("click", function(){
+  var r = window.__lastResult;
+  if (!r) return;
+  var modeText = r.mode === "reverse" ? "到期還款" : (r.mode === "flat" ? "月平息" : "年利率");
+  var text = "電話數計算結果（只供參考）\n貸款金額：" + money(r.P) + "\n期數：" + r.days + " 日\n到期日期：" + r.due + "\n"
+    + (r.mode === "reverse" ? "到期還款：" + money(r.repayment) + "\n" : modeText + "：" + pct(r.rate) + (r.mode === "flat" ? " / 月" : " / 年") + "\n")
+    + "到期還款：" + money(r.repayment) + "\n實收金額：" + money(r.net) + "\n總利息：" + money(r.interest) + "\n總成本：" + money(r.totalCost)
+    + "\n月平息：" + pct(r.flatPct) + " / 月\n實際年利率（估算）：" + pct(r.apr) + "\n手續費：" + money(r.fee);
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ $("copyBtn").textContent = "已複製"; setTimeout(function(){ $("copyBtn").textContent = "複製結果"; }, 1500); });
+  }
+});
+$("printBtn").addEventListener("click", function(){ window.print(); });
+
+(function init(){
+  var today = new Date();
+  var iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
+  $("borrowDate").value = iso;
+  renderAvatarGrid();
+  applyAvatar(loadAvatar());
+  calculate();
+})();
+</script>
+</body>
+</html>
